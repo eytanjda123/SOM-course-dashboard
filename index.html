@@ -75,6 +75,29 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .bookmark-nav-btn:hover{background:rgba(255,255,255,0.18);}
 
+.hamburger-btn{
+  display:none; flex-direction:column; justify-content:center; gap:4px;
+  width:38px; height:38px; border:1.5px solid rgba(255,255,255,0.3); border-radius:9px;
+  background:rgba(255,255,255,0.08); cursor:pointer; flex:none; padding:0;
+}
+.hamburger-btn span{display:block; width:18px; height:2px; background:#fff; margin:0 auto; border-radius:2px; transition:transform .2s, opacity .2s;}
+.hamburger-btn.open span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+.hamburger-btn.open span:nth-child(2){opacity:0;}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+
+.mobile-menu{
+  display:none; flex-direction:column; background:var(--yale-deep);
+  max-height:0; overflow:hidden; transition:max-height .25s ease;
+}
+.mobile-menu.open{max-height:520px;}
+.mobile-menu-item{
+  display:flex; align-items:center; gap:10px; text-align:left; width:100%;
+  border:none; border-top:1px solid rgba(255,255,255,0.1); background:transparent; color:rgba(255,255,255,0.85);
+  padding:15px 20px; font-size:15px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer;
+}
+.mobile-menu-item.active{background:rgba(255,255,255,0.1); color:#fff;}
+.mobile-menu-item:active{background:rgba(255,255,255,0.15);}
+
 /* ---------- LAYOUT ---------- */
 .wrap{max-width:1240px; margin:0 auto; padding:32px 28px 80px;}
 .view{display:none;}
@@ -434,9 +457,9 @@ footer{max-width:1240px; margin:0 auto; padding:10px 28px 50px; color:var(--mute
   .brand-mark{width:32px; height:32px; font-size:13px; border-radius:8px;}
   .brand-text b{font-size:15px;}
   .brand-text span{display:none;}
-  .tabs{flex:1; overflow-x:auto; justify-content:flex-start; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
-  .tabs::-webkit-scrollbar{display:none;}
-  .tab-btn{padding:8px 12px; font-size:12px; flex:none;}
+  .tabs{display:none;}
+  .hamburger-btn{display:flex;}
+  .mobile-menu{display:flex;}
   .bookmark-nav-btn{padding:8px 10px; font-size:12px;}
 
   .wrap{padding:18px 14px 70px;}
@@ -508,6 +531,18 @@ footer{max-width:1240px; margin:0 auto; padding:10px 28px 50px; color:var(--mute
       <button class="tab-btn" data-view="qa">Slack Q&amp;A</button>
     </div>
     <button class="bookmark-nav-btn" id="bookmarkNavBtn">★ <span class="bm-count">0</span></button>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-item active" data-view="dashboard">📊 Dashboard</button>
+    <button class="mobile-menu-item" data-view="browse">🔎 Browse</button>
+    <button class="mobile-menu-item" data-view="table">📋 Table</button>
+    <button class="mobile-menu-item" data-view="path">🧭 My Path</button>
+    <button class="mobile-menu-item" data-view="dates">📅 Key Dates</button>
+    <button class="mobile-menu-item" data-view="bidding">🎯 Points &amp; Enrollment</button>
+    <button class="mobile-menu-item" data-view="qa">💬 Slack Q&amp;A</button>
   </div>
 </div>
 
@@ -753,13 +788,36 @@ let ADDED_REVIEWS = [];
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> goTo(btn.dataset.view));
 });
+document.querySelectorAll('.mobile-menu-item').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    goTo(btn.dataset.view);
+    closeMobileMenu();
+  });
+});
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+function closeMobileMenu(){
+  hamburgerBtn.classList.remove('open');
+  mobileMenu.classList.remove('open');
+}
+hamburgerBtn.addEventListener('click', ()=>{
+  hamburgerBtn.classList.toggle('open');
+  mobileMenu.classList.toggle('open');
+});
+document.addEventListener('click', (e)=>{
+  if(mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !hamburgerBtn.contains(e.target)){
+    closeMobileMenu();
+  }
+});
 function goTo(view){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.mobile-menu-item').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.getElementById('bookmarkNavBtn').addEventListener('click', ()=>{
   goTo('browse');
+  closeMobileMenu();
   filterState.bookmarkedOnly = true;
   syncFilterBars();
   applyFilters();
